@@ -26,26 +26,41 @@ StudyAgent is an autonomous, agentic learning assistant that transforms raw syll
 
 ---
 
-## 🚀 Getting Started (Frontend)
+## 🚀 Getting Started (Full-Stack Setup)
 
 ### Prerequisites
 - Node.js 18+ and npm installed
+- A free [Supabase](https://supabase.com) project
 
-### Running the App Locally
+### 1. Database Setup (Supabase)
+1. Open the [Supabase SQL Editor](https://supabase.com/dashboard).
+2. Copy and run [`supabase/migrations/all_in_one_migration.sql`](supabase/migrations/all_in_one_migration.sql) to create all 20 tables, `pgvector`, HNSW indexes, RLS, and storage.
+3. Run [`supabase/seed.sql`](supabase/seed.sql) to seed the Theory of Computation demo syllabus, tasks, and quiz metrics.
 
+### 2. Environment Configuration
+Copy `.env.example` to `.env`:
 ```bash
-# 1. Install dependencies
+cp .env.example .env
+```
+Fill in your `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
+
+### 3. Running the Backend API
+```bash
+cd server
 npm install
-
-# 2. Run Vite development server
-npm run dev
-
-# 3. Open in browser
-http://localhost:5173/
+npm run test:db   # Verify 5/5 database & pgvector tests pass
+npm start         # Starts Express API on http://localhost:5000
 ```
 
-### Building for Production
+### 4. Running the Frontend
+In a new terminal:
+```bash
+npm install
+npm run dev       # Starts React Vite dev server on http://localhost:5173
+```
+Open **[http://localhost:5173](http://localhost:5173)** in your browser.
 
+### Building for Production
 ```bash
 npm run build
 ```

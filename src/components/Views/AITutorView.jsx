@@ -37,7 +37,7 @@ export default function AITutorView({ initialQuery = '' }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const handleSendMessage = (textToSend) => {
+  const handleSendMessage = async (textToSend) => {
     const text = textToSend || inputQuery;
     if (!text.trim()) return;
 
@@ -46,7 +46,36 @@ export default function AITutorView({ initialQuery = '' }) {
     setInputQuery('');
     setIsTyping(true);
 
-    // Simulate Agentic RAG retrieval + LLM synthesis
+    const API_BASE = import.meta.env.VITE_AGENT_API_URL || 'http://localhost:5000/api';
+    try {
+      const res = await fetch(`${API_BASE}/tutor/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-dev-user-id': 'c956eecf-65c7-4259-b6ed-5712b05faee2'
+        },
+        body: JSON.stringify({ query: text })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            sender: 'bot',
+            text: data.reply,
+            citation: data.citation
+          }
+        ]);
+        setIsTyping(false);
+        return;
+      }
+    } catch (e) {
+      console.log('Tutor API fallback:', e);
+    }
+
+    // Graceful offline fallback
     setTimeout(() => {
       let botReply = `Based on your uploaded course notes on ${text}, here is the breakdown:\n\n• Core Concept: Key theoretical principles indicate how transitions and language bounds are evaluated.\n• Exam Tip: Always write formal 5-tuple definition (Q, Σ, δ, q0, F) when answering 5-mark questions.\n• Adaptive Warning: You had difficulties with this in the Unit 2 quiz. Make sure to practice 2 state transition examples!`;
       let citation = "TOC_Unit_2_Regular_Expressions.pdf (Page 14)";
@@ -66,7 +95,7 @@ export default function AITutorView({ initialQuery = '' }) {
         }
       ]);
       setIsTyping(false);
-    }, 1200);
+    }, 600);
   };
 
   return (

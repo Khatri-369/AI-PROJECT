@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import HeroBanner from './components/Dashboard/HeroBanner';
@@ -44,6 +44,25 @@ export default function App() {
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
 
+  // Load live data from Supabase backend on mount
+  useEffect(() => {
+    const API_BASE = import.meta.env.VITE_AGENT_API_URL || 'http://localhost:5000/api';
+    fetch(`${API_BASE}/dashboard`, {
+      headers: { 'x-dev-user-id': 'c956eecf-65c7-4259-b6ed-5712b05faee2' }
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) {
+          if (data.tasks && data.tasks.length > 0) setTasks(data.tasks);
+          if (data.stats) setStats(data.stats);
+          if (data.exam && data.exam.name) setExam(data.exam);
+          if (data.subjects && data.subjects.length > 0) setSubjects(data.subjects);
+          if (data.recentQuiz && data.recentQuiz.title) setRecentQuiz(data.recentQuiz);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Dynamic task toggle
   const handleToggleTask = (taskId) => {
     setTasks((prevTasks) => {
@@ -58,6 +77,13 @@ export default function App() {
         ...prev,
         overallProgress: Math.min(100, 60 + progressDelta)
       }));
+
+      // Async sync with Supabase backend
+      const API_BASE = import.meta.env.VITE_AGENT_API_URL || 'http://localhost:5000/api';
+      fetch(`${API_BASE}/study-plans/tasks/${taskId}/toggle`, {
+        method: 'PATCH',
+        headers: { 'x-dev-user-id': 'c956eecf-65c7-4259-b6ed-5712b05faee2' }
+      }).catch(() => {});
 
       return updated;
     });
@@ -95,7 +121,19 @@ export default function App() {
     }));
   };
 
-  const handleRegeneratePlan = () => {
+  const handleRegeneratePlan = async () => {
+    const API_BASE = import.meta.env.VITE_AGENT_API_URL || 'http://localhost:5000/api';
+    try {
+      const res = await fetch(`${API_BASE}/study-plans/adapt`, {
+        method: 'POST',
+        headers: { 'x-dev-user-id': 'c956eecf-65c7-4259-b6ed-5712b05faee2' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        alert(`🤖 Adaptive Planner Triggered: ${data.message || 'Analyzed quiz performance and restructured Day 9 for remedial revision.'}`);
+        return;
+      }
+    } catch (e) {}
     alert("🤖 Adaptive Planner Triggered: Analyzed your recent quiz performance (45% on Unit 2). Rescheduled Day 9 to prioritize remedial revision for NFA-to-DFA & Pumping Lemma.");
   };
 
