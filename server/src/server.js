@@ -31,6 +31,25 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: '🎓 Welcome to StudyAgent API (Supabase PostgreSQL + pgvector Backend)',
+    status: 'online',
+    frontendUrl: 'http://localhost:5173',
+    endpoints: {
+      health: '/health',
+      dashboard: '/api/dashboard',
+      ragSearch: '/api/rag/search',
+      tutorChat: '/api/tutor/chat',
+      quiz: '/api/quiz',
+      studyPlans: '/api/study-plans',
+      subjects: '/api/subjects',
+      notifications: '/api/notifications'
+    }
+  });
+});
+
 // Health Check
 app.get('/health', (req, res) => {
   res.json({
